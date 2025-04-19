@@ -2,7 +2,15 @@ import { ParamListBase } from "@react-navigation/native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
 import { useEffect, useState } from "react";
-import { Button, FlatList, Text, TextInput, View } from "react-native";
+import {
+  Button,
+  FlatList,
+  processColor,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { useMyContext } from "./App";
 
 type HomeScreenProps = NativeStackScreenProps<ParamListBase, "Home">;
 
@@ -18,13 +26,34 @@ const Test: React.FC<HomeScreenProps> = ({ navigation }) => {
 
   const database = useSQLiteContext();
 
+  const { useId, setId } = useMyContext();
+
   const loadData = async () => {
-    const result = await database.getAllAsync<UserType>("SELECT * FROM users");
-    console.log(result);
+    const result = await database.getAllAsync<UserType>(
+      "SELECT * FROM last_logged_in"
+    );
+    // console.log(result);
     setData(result);
   };
 
+  const loadUser = async () => {
+    try {
+      const result = await database.getFirstAsync<{ name: string }>(
+        "SELECT username FROM users WHERE id = ?;",
+        useId
+      );
+      console.log(result);
+      if (typeof result?.name === "string") {
+        navigation.setOptions({ title: "Hello " + result.name });
+      }
+    } catch (error) {
+      console.log(error);
+      navigation.replace("Onboard");
+    }
+  };
+
   useEffect(() => {
+    loadUser();
     loadData();
   }, []);
 
@@ -44,6 +73,7 @@ const Test: React.FC<HomeScreenProps> = ({ navigation }) => {
         }}
         color="#841584"
       />
+      <Text>{}</Text>
       <FlatList
         data={useData}
         renderItem={({ item }) => (
