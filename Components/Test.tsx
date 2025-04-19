@@ -1,25 +1,26 @@
+import { ParamListBase } from "@react-navigation/native";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { useSQLiteContext } from "expo-sqlite";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, FlatList, Text, TextInput, View } from "react-native";
-const Test = () => {
+
+type HomeScreenProps = NativeStackScreenProps<ParamListBase, "Home">;
+
+const Test: React.FC<HomeScreenProps> = ({ navigation }) => {
   const [useTest, setTest] = useState("");
   const [useData, setData] = useState<UserType[]>([]);
-  type UserType = { id: number; name: string; date: string };
+  type UserType = {
+    id: number;
+    username: string;
+    trackers: string;
+    date: string;
+  };
 
   const database = useSQLiteContext();
 
-  const handlePress = () => {
-    try {
-      database.runAsync("INSERT INTO test (name) VALUES (?);", [useTest]);
-      loadData();
-      setTest("");
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
   const loadData = async () => {
-    const result = await database.getAllAsync<UserType>("SELECT * FROM test");
+    const result = await database.getAllAsync<UserType>("SELECT * FROM users");
+    console.log(result);
     setData(result);
   };
 
@@ -36,13 +37,20 @@ const Test = () => {
         value={useTest}
         placeholder="Enter text here"
       />
-      <Button title="Press Me" onPress={handlePress} color="#841584" />
+      <Button
+        title="Onboard"
+        onPress={() => {
+          navigation.replace("Onboard");
+        }}
+        color="#841584"
+      />
       <FlatList
         data={useData}
         renderItem={({ item }) => (
           <View>
             <Text>{item.id}</Text>
-            <Text>{item.name}</Text>
+            <Text>{item.username}</Text>
+            <Text>{item.trackers}</Text>
             <Text>{item.date}</Text>
           </View>
         )}
